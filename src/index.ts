@@ -5,24 +5,21 @@ import microConfig from './mikro-orm.config';
 import express from 'express';
 import {ApolloServer} from 'apollo-server-express';
 import { buildSchema } from "type-graphql";
-import { HelloResolver } from "./resolves/hello";
-import { PostResolver } from "./resolves/post";
+import { HelloResolver } from "./resolvers/hello";
+import { PostResolver } from "./resolvers/post";
+import { UserResolver } from "./resolvers/user";
 import 'reflect-metadata';
 
 const main = async () => {
     
-    
     const orm = await MikroORM.init(microConfig);
     await orm.getMigrator().up();
-    console.log('--------sql-----1-----')
+
     const em = orm.em.fork();
     
     // create a post
     // const post = em.create(Post, {title: "seecond post"} as Post)
     // await em.persistAndFlush(post)
-    
-
-    console.log('--------sql----2------')
     
     // extract all posts
     const posts = await em.find(Post, {});
@@ -37,7 +34,7 @@ const main = async () => {
 
     const apolloServer = new ApolloServer({
         schema: await buildSchema({
-            resolvers: [HelloResolver, PostResolver],
+            resolvers: [HelloResolver, PostResolver, UserResolver],
             validate: false
         }),
         context: ({req}) => ({em: req.em})
