@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const core_1 = require("@mikro-orm/core");
 const Post_js_1 = require("./entities/Post.js");
 const mikro_orm_config_1 = __importDefault(require("./mikro-orm.config"));
+const express_1 = __importDefault(require("express"));
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
     const orm = yield core_1.MikroORM.init(mikro_orm_config_1.default);
     yield orm.getMigrator().up();
@@ -23,6 +24,13 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     console.log('--------sql----2------');
     const posts = yield em.find(Post_js_1.Post, {});
     console.log(posts);
+    const app = (0, express_1.default)();
+    app.get('/', (_, res) => {
+        res.send('home page');
+    });
+    app.listen(4000, () => {
+        console.log('server started on 4000');
+    });
 });
 main().catch((err) => {
     console.log("ERROR: ", err);
