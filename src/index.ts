@@ -1,8 +1,11 @@
 import { MikroORM } from "@mikro-orm/core";
 import { __prod__ } from "./constants";
 import { Post } from "./entities/Post.js";
-import microConfig from './mikro-orm.config'
-import express from 'express'
+import microConfig from './mikro-orm.config';
+import express from 'express';
+import {ApolloServer} from 'apollo-server-express';
+import { buildSchema } from "type-graphql";
+import { HelloResolver } from "./resolves/hello";
 
 const main = async () => {
     
@@ -24,6 +27,21 @@ const main = async () => {
     console.log(posts)
 
     const app = express();
+
+    const apolloServer = new ApolloServer({
+        schema: await buildSchema({
+            resolvers: [HelloResolver],
+            validate: false
+        })
+    })
+
+    // You must await server.start() before calling server.applyMiddleware()
+    await apolloServer.start();
+
+    // create graphql endpoint on express
+    apolloServer.applyMiddleware({app})
+
+
     app.get('/', (_, res)=>{
         res.send('home page')
 

@@ -13,11 +13,11 @@ exports.HelloResolver = void 0;
 const type_graphql_1 = require("type-graphql");
 let HelloResolver = exports.HelloResolver = class HelloResolver {
     hello() {
-        return "hello world";
+        return "return value of hello() sent back to client as response for 'hello' query";
     }
 };
 __decorate([
-    Query(),
+    (0, type_graphql_1.Query)(() => String),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
