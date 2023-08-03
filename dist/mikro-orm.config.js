@@ -8,7 +8,7 @@ const Post_1 = require("./entities/Post");
 const path_1 = __importDefault(require("path"));
 const microConfig = {
     migrations: {
-        path: path_1.default.join(__dirname, './migrations'),
+        path: path_1.default.join('./migrations'),
         glob: '/^[\w]+\d+\.[tj]s$/',
     },
     entities: [Post_1.Post],

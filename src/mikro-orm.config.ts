@@ -5,7 +5,7 @@ import path from "path";
 
 const microConfig: Options = {
     migrations: {
-        path: path.join(__dirname, './migrations'), // path to the folder with migrations
+        path: path.join('./migrations'), // path to the folder with migrations
         glob: '/^[\w]+\d+\.[tj]s$/',
     },
     entities: [Post],

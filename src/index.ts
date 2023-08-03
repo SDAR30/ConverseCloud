@@ -8,8 +8,11 @@ const main = async () => {
     const orm = await MikroORM.init(microConfig);
     await orm.getMigrator().up();
     console.log('--------sql-----1-----')
-   
     const em = orm.em.fork();
+
+    // const post = em.create(Post, {title: "seecond post"} as Post)
+    // await em.persistAndFlush(post)
+    
 
     console.log('--------sql----2------')
     const posts = await em.find(Post, {});
