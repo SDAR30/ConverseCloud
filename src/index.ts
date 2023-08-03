@@ -6,6 +6,8 @@ import express from 'express';
 import {ApolloServer} from 'apollo-server-express';
 import { buildSchema } from "type-graphql";
 import { HelloResolver } from "./resolves/hello";
+import { PostResolver } from "./resolves/post";
+import 'reflect-metadata';
 
 const main = async () => {
     
@@ -28,11 +30,17 @@ const main = async () => {
 
     const app = express();
 
+    app.use((req, _, next) => {
+        req.em = em.fork();
+        next();
+      });
+
     const apolloServer = new ApolloServer({
         schema: await buildSchema({
-            resolvers: [HelloResolver],
+            resolvers: [HelloResolver, PostResolver],
             validate: false
-        })
+        }),
+        context: ({req}) => ({em: req.em})
     })
 
     // You must await server.start() before calling server.applyMiddleware()
