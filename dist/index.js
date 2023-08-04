@@ -25,7 +25,11 @@ require("reflect-metadata");
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
     const orm = yield core_1.MikroORM.init(mikro_orm_config_1.default);
     yield orm.getMigrator().up();
+    console.log(' ----------111---------');
     const em = orm.em.fork();
+    const generator = orm.getSchemaGenerator();
+    yield generator.updateSchema();
+    console.log(' ----------333---------');
     const posts = yield em.find(Post_js_1.Post, {});
     console.log(posts);
     const app = (0, express_1.default)();
@@ -53,4 +57,5 @@ main().catch((err) => {
     console.log("ERROR: ", err);
 });
 console.log('ending console log -----');
+console.log("dirname:", __dirname);
 //# sourceMappingURL=index.js.map

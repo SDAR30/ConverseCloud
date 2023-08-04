@@ -41,24 +41,105 @@ __decorate([
 UsernamePassowrdInput = __decorate([
     (0, type_graphql_1.InputType)()
 ], UsernamePassowrdInput);
+let FieldError = class FieldError {
+};
+__decorate([
+    (0, type_graphql_1.Field)(),
+    __metadata("design:type", String)
+], FieldError.prototype, "field", void 0);
+__decorate([
+    (0, type_graphql_1.Field)(),
+    __metadata("design:type", String)
+], FieldError.prototype, "message", void 0);
+FieldError = __decorate([
+    (0, type_graphql_1.ObjectType)()
+], FieldError);
+let UserResponse = class UserResponse {
+};
+__decorate([
+    (0, type_graphql_1.Field)(() => [FieldError], { nullable: true }),
+    __metadata("design:type", Array)
+], UserResponse.prototype, "errors", void 0);
+__decorate([
+    (0, type_graphql_1.Field)(() => User_1.User, { nullable: true }),
+    __metadata("design:type", User_1.User)
+], UserResponse.prototype, "user", void 0);
+UserResponse = __decorate([
+    (0, type_graphql_1.ObjectType)()
+], UserResponse);
 let UserResolver = exports.UserResolver = class UserResolver {
     register(options, { em }) {
         return __awaiter(this, void 0, void 0, function* () {
+            if (options.username.length < 3) {
+                return {
+                    errors: [
+                        {
+                            field: "username",
+                            message: "username is too short",
+                        },
+                    ],
+                };
+            }
+            if (options.password.length < 3) {
+                return {
+                    errors: [
+                        {
+                            field: "password",
+                            message: "password is too short",
+                        },
+                    ],
+                };
+            }
             const hashedPassword = yield argon2_1.default.hash(options.password);
             const user = em.create(User_1.User, { username: options.username, password: hashedPassword });
             yield em.persistAndFlush(user);
-            return user;
+            return { user };
+        });
+    }
+    login(options, { em }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const user = yield em.findOne(User_1.User, { username: options.username.toLowerCase() });
+            if (!user) {
+                return {
+                    errors: [
+                        {
+                            field: "username",
+                            message: "that username doesn't exist"
+                        },
+                    ],
+                };
+            }
+            const valid = yield argon2_1.default.verify(user.password, options.password);
+            if (!valid) {
+                return {
+                    errors: [
+                        {
+                            field: "password",
+                            message: "passsword is incorrectt"
+                        },
+                    ],
+                };
+            }
+            return { user, };
         });
     }
 };
 __decorate([
-    (0, type_graphql_1.Mutation)(() => User_1.User),
+    (0, type_graphql_1.Mutation)(() => UserResponse),
     __param(0, (0, type_graphql_1.Arg)('options')),
     __param(1, (0, type_graphql_1.Ctx)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [UsernamePassowrdInput, Object]),
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "register", null);
+__decorate([
+    (0, type_graphql_1.Mutation)(() => UserResponse),
+    __param(0, (0, type_graphql_1.Arg)('options')),
+    __param(1, (0, type_graphql_1.Ctx)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [UsernamePassowrdInput, Object]),
+    __metadata("design:returntype", Promise)
+], UserResolver.prototype, "login", null);
 exports.UserResolver = UserResolver = __decorate([
     (0, type_graphql_1.Resolver)()
 ], UserResolver);
