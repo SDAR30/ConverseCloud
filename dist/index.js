@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const core_1 = require("@mikro-orm/core");
+const constants_1 = require("./constants");
 const Post_js_1 = require("./entities/Post.js");
 const mikro_orm_config_1 = __importDefault(require("./mikro-orm.config"));
 const express_1 = __importDefault(require("express"));
@@ -28,7 +29,6 @@ const redis_1 = require("redis");
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
     const orm = yield core_1.MikroORM.init(mikro_orm_config_1.default);
     yield orm.getMigrator().up();
-    console.log(' ----------111---------');
     const em = orm.em.fork();
     const generator = orm.getSchemaGenerator();
     yield generator.updateSchema();
@@ -36,17 +36,25 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     const posts = yield em.find(Post_js_1.Post, {});
     console.log(posts);
     const app = (0, express_1.default)();
-    const redisClient = (0, redis_1.createClient)();
-    redisClient.connect().catch(console.error);
-    const redisStore = new connect_redis_1.default({
-        client: redisClient,
-        prefix: "myapp:",
-    });
+    const redisClient = (0, redis_1.createClient)({ legacyMode: true });
+    redisClient.on("connect", () => console.log('Connnected to Reddis locally!'));
+    redisClient.on("error", (err) => console.log("redits Client Error", err));
+    redisClient.connect();
     app.use((0, express_session_1.default)({
-        store: redisStore,
+        name: 'qid',
+        store: new connect_redis_1.default({
+            client: redisClient,
+            disableTouch: true,
+        }),
+        cookie: {
+            maxAge: 1000 * 60 * 60 * 24 * 365 * 10,
+            httpOnly: true,
+            sameSite: 'lax',
+            secure: constants_1.__prod__
+        },
         resave: false,
         saveUninitialized: false,
-        secret: "keyboard cat",
+        secret: "ompasfk",
     }));
     app.use((req, _, next) => {
         req.em = em.fork();
@@ -57,7 +65,7 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
             resolvers: [hello_1.HelloResolver, post_1.PostResolver, user_1.UserResolver],
             validate: false
         }),
-        context: ({ req }) => ({ em: req.em })
+        context: ({ req, res }) => ({ em: req.em, req, res })
     });
     yield apolloServer.start();
     apolloServer.applyMiddleware({ app });

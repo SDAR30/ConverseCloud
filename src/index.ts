@@ -12,14 +12,12 @@ import 'reflect-metadata';
 
 import RedisStore from "connect-redis"
 import session from "express-session";
-import { createClient } from "redis"
+import { createClient } from "redis";
 
 const main = async () => {
 
     const orm = await MikroORM.init(microConfig);
     await orm.getMigrator().up();
-
-    console.log(' ----------111---------')
 
     const em = orm.em.fork();
 
@@ -38,23 +36,29 @@ const main = async () => {
 
     const app = express();
 
-    // Initialize client.
-    const redisClient = createClient()
-    redisClient.connect().catch(console.error)
-
-    // Initialize store.
-    const redisStore = new RedisStore({
-        client: redisClient,
-        prefix: "myapp:",
-    })
+    const redisClient = createClient({ legacyMode: true });
+    redisClient.on("connect", () => console.log('Connnected to Reddis locally!'))
+    redisClient.on("error", (err: Error) => console.log("redits Client Error", err))
+    redisClient.connect();
 
     // Initialize sesssion storage.
     app.use(
         session({
-            store: redisStore,
+            name: 'qid',
+            store: new RedisStore({
+                client: redisClient,
+                disableTouch: true,
+
+            }),
+            cookie: {
+                maxAge: 1000 * 60 * 60 * 24 * 365 * 10, //10 years
+                httpOnly: true, // can't access in frontend js code
+                sameSite: 'lax',
+                secure: __prod__ // cookie only works in https
+            },
             resave: false, // required: force lightweight session keep alive (touch)
             saveUninitialized: false, // recommended: only save session when data exists
-            secret: "keyboard cat",
+            secret: "ompasfk", // keep this in .env
         })
     )
 
@@ -68,7 +72,7 @@ const main = async () => {
             resolvers: [HelloResolver, PostResolver, UserResolver],
             validate: false
         }),
-        context: ({ req }) => ({ em: req.em })
+        context: ({ req, res }) => ({ em: req.em, req, res })
     })
 
     // You must await server.start() before calling server.applyMiddleware()
