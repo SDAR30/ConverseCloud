@@ -9,6 +9,11 @@ import { HelloResolver } from "./resolvers/hello";
 import { PostResolver } from "./resolvers/post";
 import { UserResolver } from "./resolvers/user";
 import 'reflect-metadata';
+
+import RedisStore from "connect-redis"
+import session from "express-session";
+import { createClient } from "redis"
+
 const main = async () => {
 
     const orm = await MikroORM.init(microConfig);
@@ -32,6 +37,26 @@ const main = async () => {
     console.log(posts)
 
     const app = express();
+
+    // Initialize client.
+    const redisClient = createClient()
+    redisClient.connect().catch(console.error)
+
+    // Initialize store.
+    const redisStore = new RedisStore({
+        client: redisClient,
+        prefix: "myapp:",
+    })
+
+    // Initialize sesssion storage.
+    app.use(
+        session({
+            store: redisStore,
+            resave: false, // required: force lightweight session keep alive (touch)
+            saveUninitialized: false, // recommended: only save session when data exists
+            secret: "keyboard cat",
+        })
+    )
 
     app.use((req, _, next) => {
         req.em = em.fork();

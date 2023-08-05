@@ -22,6 +22,9 @@ const hello_1 = require("./resolvers/hello");
 const post_1 = require("./resolvers/post");
 const user_1 = require("./resolvers/user");
 require("reflect-metadata");
+const connect_redis_1 = __importDefault(require("connect-redis"));
+const express_session_1 = __importDefault(require("express-session"));
+const redis_1 = require("redis");
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
     const orm = yield core_1.MikroORM.init(mikro_orm_config_1.default);
     yield orm.getMigrator().up();
@@ -33,6 +36,18 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     const posts = yield em.find(Post_js_1.Post, {});
     console.log(posts);
     const app = (0, express_1.default)();
+    const redisClient = (0, redis_1.createClient)();
+    redisClient.connect().catch(console.error);
+    const redisStore = new connect_redis_1.default({
+        client: redisClient,
+        prefix: "myapp:",
+    });
+    app.use((0, express_session_1.default)({
+        store: redisStore,
+        resave: false,
+        saveUninitialized: false,
+        secret: "keyboard cat",
+    }));
     app.use((req, _, next) => {
         req.em = em.fork();
         next();
