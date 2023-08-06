@@ -16,6 +16,7 @@ const microConfig = {
     dbName: 'forum1',
     type: 'postgresql',
     debug: !constants_1.__prod__,
+    allowGlobalContext: true
 };
 exports.default = microConfig;
 //# sourceMappingURL=mikro-orm.config.js.map
